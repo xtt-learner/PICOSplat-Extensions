@@ -12,16 +12,6 @@
 | **空间裁剪框** | 保留或移除指定盒体区域中的高斯点，支持多个盒体和 Tag 选择 | `APICOSplatCullBoxActor` |
 | **高斯帧序列播放** | 按指定帧率播放多帧 GS 资产，支持暂停、跳帧和循环 | `APICO4DGSActor` / `UPICO4DGSComponent` |
 
-<!-- MEDIA: overview-video | 建议文件 docs/media/overview.mp4；补齐后将下方占位替换为可访问的视频链接。 -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>项目总览视频 · 待补</strong><br>
-同一场景中展示外观调整、过滤裁剪、动态播放与 Cubemap 输出。
-<br><br><br>
-</td></tr>
-</table>
-
 ## GS 原生 Cubemap 捕获
 
 在交互场景中，将 GS 内容显示到另一处屏幕或全景材质，需要从指定位置生成离屏视图。本扩展在 PICOSplat 渲染路径中为六个方向分别计算视图、进行 GPU 排序并绘制，将结果写入 `UTextureRenderTargetCube`。
@@ -35,26 +25,6 @@
     → 将各面写入 TextureRenderTargetCube
     → 供材质采样
 ```
-
-<!-- MEDIA: cubemap-image | 建议文件 docs/media/cubemap-faces.png -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>截图位置 · 六面捕获结果</strong><br>
-展示 +X、−X、+Y、−Y、+Z、−Z 六面，以及场景中采样 Cube RT 的效果。
-<br><br><br>
-</td></tr>
-</table>
-
-<!-- MEDIA: cubemap-video | 建议文件 docs/media/cubemap-capture.mp4 -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>视频位置 · 捕获与更新</strong><br>
-改变捕获位置，手动重新捕获，展示输出随视点更新的过程。
-<br><br><br>
-</td></tr>
-</table>
 
 ### 快速使用
 
@@ -101,16 +71,6 @@
 
 同一份 GS 资产可直接调整整体明暗和颜色氛围，方便制作日夜氛围切换、展项高亮和统一的场景视觉风格。
 
-<!-- MEDIA: appearance-image | 建议文件 docs/media/appearance-presets.png -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>截图位置 · 同视角外观对比</strong><br>
-默认 / 暖色 / 夜间三栏，标明 Tint 与 Exposure，保持相机和其他场景设置一致。
-<br><br><br>
-</td></tr>
-</table>
-
 | 蓝图接口 | 行为 |
 | --- | --- |
 | `SetGlobalTint(FLinearColor)` | 设置整体 RGB 色调并刷新渲染状态 |
@@ -133,16 +93,6 @@
 
 按高斯点的 alpha 阈值清理低透明度点，并通过统计查看清理结果。组件保留源资产，以临时副本应用过滤，支持随时恢复和反复调整。
 
-<!-- MEDIA: opacity-image | 建议文件 docs/media/opacity-filter.png -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>截图位置 · 透明度过滤前后</strong><br>
-固定视角对比，标明阈值、原始点数、移除点数和剩余点数。
-<br><br><br>
-</td></tr>
-</table>
-
 1. 在目标 Splat 组件中启用 `bEnableSplatFiltering`。
 2. 设置 `MinOpacityThreshold`，默认值为 `0.01`；alpha **小于**该值的点被移除。
 3. 如果只测试透明度过滤，可关闭 `bEnableCullBoxes`。
@@ -161,16 +111,6 @@
 ## 空间裁剪框
 
 通过 `APICOSplatCullBoxActor` 在场景中圈定保留或移除区域，可用于清理边缘杂点、裁出展示区域，或在同一份 GS 数据中选择局部内容。
-
-<!-- MEDIA: cullbox-video | 建议文件 docs/media/cullbox-edit.mp4；也可用 docs/media/cullbox-comparison.png 替换。 -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>视频 / 截图位置 · 空间裁剪</strong><br>
-调整盒体后点击 Rebuild，分别展示 Remove Inside、Keep Inside 和 Clear 恢复。
-<br><br><br>
-</td></tr>
-</table>
 
 ### 使用步骤
 
@@ -193,16 +133,6 @@
 ## 高斯资产帧序列播放
 
 `APICO4DGSActor` 将渲染组件和播放组件组合在一个可放置 Actor 中；`UPICO4DGSComponent` 按帧率播放预先导入的离散 `USplatAsset` 序列，将动态 GS 数据接入关卡与蓝图交互。
-
-<!-- MEDIA: sequence-video | 建议文件 docs/media/gaussian-sequence.mp4 -->
-<table>
-<tr><td align="center">
-<br><br>
-<strong>视频位置 · 动态 GS 与播放控制</strong><br>
-展示播放、暂停、前后单步和跳帧；保留当前帧编号，并标明帧率、帧数与设备。
-<br><br><br>
-</td></tr>
-</table>
 
 ### 快速使用
 
@@ -266,8 +196,6 @@ git clone https://github.com/xtt-learner/PICOSplat-Extensions.git Plugins/PICOSp
 | 盒体模式和目标 Tag | [PICOSplatCullBoxActor.h](Source/PICOSplatRuntime/Public/PICOSplatCullBoxActor.h) |
 | 帧序列播放 | [PICO4DGSComponent.cpp](Source/PICOSplatRuntime/Private/PICO4DGSComponent.cpp) |
 | 外观调节的像素 Shader | [render_splat.ps.ush](Source/ThirdParty/Shaders/Public/render_splat.ps.ush) |
-
-展示素材的文件位置与拍摄建议见 [素材清单](docs/media/README.md)。
 
 ## 上游与许可
 
