@@ -1,0 +1,13 @@
+/*
+  Copyright (c) 2025 PICO Technology Co., Ltd. See LICENSE.md.
+*/
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Public/Platform.ush"
+
+#include "../ThirdParty/Public/constants.ush"
+
+float4 global_tint;
+float exposure;
+
+#include "../ThirdParty/Public/render_splat.ps.ush"

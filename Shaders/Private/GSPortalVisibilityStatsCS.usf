@@ -1,0 +1,89 @@
+/*
+  Copyright (c) 2025 PICO Technology Co., Ltd. See LICENSE.md.
+*/
+
+#include "/Engine/Public/Platform.ush"
+
+#include "../ThirdParty/Public/unpacking.ush"
+
+float4x4 local_to_view;
+float4x4 local_to_clip;
+float near_clip;
+float far_clip;
+float frustum_margin;
+float max_splat_scale;
+uint num_splats;
+float3 pos_scale_cm;
+float3 pos_min_cm;
+
+Buffer<uint> positions;
+Buffer<half4> transforms;
+RWBuffer<float> view_z;
+RWBuffer<uint> flags;
+
+#define GSPortalVis_ZLEZero 1u
+#define GSPortalVis_ZLENear 2u
+#define GSPortalVis_ZGTFar 4u
+#define GSPortalVis_PosNaNInf 8u
+#define GSPortalVis_InsideClip 16u
+#define GSPortalVis_OutsideClip 32u
+#define GSPortalVis_NDCValid 64u
+#define GSPortalVis_ScaleNaNInf 128u
+#define GSPortalVis_ScaleGT512 256u
+#define GSPortalVis_ScaleGT2048 512u
+#define GSPortalVis_ScaleGT10000 1024u
+#define GSPortalVis_ScaleGTMax 2048u
+
+[numthreads(THREAD_GROUP_SIZE_X, 1, 1)]
+void main(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+	uint splat_id = dispatch_thread_id.x;
+	if (splat_id >= num_splats)
+	{
+		return;
+	}
+
+	float4 pos_local = unpack_pos(positions[splat_id], pos_scale_cm, pos_min_cm);
+	float3 pos_view = mul(pos_local, local_to_view).xyz;
+	float4 pos_clip = mul(pos_local, local_to_clip);
+	float inv_w = rcp(pos_clip.w);
+	float3 ndc = pos_clip.xyz * inv_w;
+
+	half4 t = transforms[splat_id];
+	float scale_x = length(float2(t.x, t.z));
+	float scale_y = length(float2(t.y, t.w));
+	float max_scale = max(scale_x, scale_y);
+
+	uint out_flags = 0u;
+	bool pos_finite =
+		isfinite(pos_view.x) && isfinite(pos_view.y) && isfinite(pos_view.z) &&
+		isfinite(pos_clip.x) && isfinite(pos_clip.y) &&
+		isfinite(pos_clip.z) && isfinite(pos_clip.w) &&
+		isfinite(ndc.x) && isfinite(ndc.y) && isfinite(ndc.z);
+	bool scale_finite =
+		isfinite(t.x) && isfinite(t.y) && isfinite(t.z) && isfinite(t.w) &&
+		isfinite(scale_x) && isfinite(scale_y);
+
+	out_flags |= pos_view.z <= 0.0f ? GSPortalVis_ZLEZero : 0u;
+	out_flags |= pos_view.z <= near_clip ? GSPortalVis_ZLENear : 0u;
+	out_flags |= pos_view.z > far_clip ? GSPortalVis_ZGTFar : 0u;
+	out_flags |= !pos_finite ? GSPortalVis_PosNaNInf : 0u;
+
+	bool depth_valid = pos_clip.w > 0.0f && ndc.z >= 0.0f && ndc.z <= 1.0f;
+	bool ndc_xy_valid =
+		abs(ndc.x) <= 1.0f + frustum_margin &&
+		abs(ndc.y) <= 1.0f + frustum_margin;
+	bool inside_clip = pos_finite && depth_valid && ndc_xy_valid &&
+		pos_view.z > near_clip && pos_view.z <= far_clip;
+	out_flags |= inside_clip ? GSPortalVis_InsideClip : GSPortalVis_OutsideClip;
+	out_flags |= (pos_finite && depth_valid && ndc_xy_valid) ? GSPortalVis_NDCValid : 0u;
+
+	out_flags |= !scale_finite ? GSPortalVis_ScaleNaNInf : 0u;
+	out_flags |= max_scale > 512.0f ? GSPortalVis_ScaleGT512 : 0u;
+	out_flags |= max_scale > 2048.0f ? GSPortalVis_ScaleGT2048 : 0u;
+	out_flags |= max_scale > 10000.0f ? GSPortalVis_ScaleGT10000 : 0u;
+	out_flags |= max_scale > max_splat_scale ? GSPortalVis_ScaleGTMax : 0u;
+
+	view_z[splat_id] = pos_view.z;
+	flags[splat_id] = out_flags;
+}

@@ -1,0 +1,30 @@
+# Unreal generated files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# IDE and local state
+.vs/
+.vscode/
+*.sln
+*.suo
+*.user
+*.VC.db
+*.VC.opendb
+__pycache__/
+
+# Build products and local archives
+*.dll
+*.pdb
+*.obj
+*.lib
+*.exp
+*.exe
+*.apk
+*.aab
+*.obb
+*.zip
+*.log
+*.tmp
+*.bak
